@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import subprocess
-from colabcode import ColabCode
+import uvicorn
 
 app = FastAPI()
 
@@ -38,10 +38,11 @@ async def get_info(image: UploadFile = File(...), message: str = Form(...)):
     except Exception as e:
         return HTMLResponse(content=open("static/error.html").read(), status_code=500)
     
-cc = ColabCode(port=8000, code=False)
+
     
 if __name__ == "__main__":
     
-    cc.run_app(app=app)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+     
 
 
