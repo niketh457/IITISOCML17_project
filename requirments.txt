@@ -3,7 +3,7 @@ torchvision
 opencv-python
 scikit-image
 editdistance
-fastapi
+fastapi>=0.100.0
 uvicorn
 gunicorn
 uvloop

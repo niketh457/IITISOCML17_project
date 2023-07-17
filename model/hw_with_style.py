@@ -165,14 +165,13 @@ class HWWithStyle(BaseModel):
 
         if 'generator' in config and config['generator'] == 'none':
             self.generator = None
-        elif 'Pure' in 'PureGen':
+        elif True:
             g_dim = config['gen_dim'] if 'gen_dim' in config else 256
             n_style_trans = config['n_style_trans'] if 'n_style_trans' in config else 6
             emb_dropout = config['style_emb_dropout'] if 'style_emb_dropout' in config else False
             append_style = config['gen_append_style'] if 'gen_append_style' in config else False
             self.generator = SpacedGenerator(num_class,style_dim,g_dim,n_style_trans=n_style_trans,emb_dropout=emb_dropout,append_style=append_style,small=small)
-        else:
-            raise NotImplementedError('unknown generator: '+config['generator'])
+        
 
 
         if 'discriminator' in config and config['discriminator'] is not None:
