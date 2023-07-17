@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
+from pathlib import Path
 import subprocess
 import uvicorn
 
@@ -38,7 +39,13 @@ async def get_info(image: UploadFile = File(...), message: str = Form(...)):
     except Exception as e:
         return HTMLResponse(content=open("static/error.html").read(), status_code=500)
     
-
+@app.get("/download")
+async def download_output(filename: str):
+    file_path = Path(filename)
+    if file_path.exists():
+        return FileResponse(file_path, headers={"Content-Disposition": f"attachment; filename={file_path.name}"})
+    else:
+        return HTMLResponse(content=open("static/error.html").read(), status_code=404)
     
 if __name__ == "__main__":
     
