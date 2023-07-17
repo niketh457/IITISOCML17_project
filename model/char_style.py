@@ -32,9 +32,7 @@ class Conv2dBlock(nn.Module):
             #self.norm = nn.InstanceNorm2d(norm_dim, track_running_stats=True)
             self.norm = nn.InstanceNorm2d(norm_dim)
         elif norm == 'ln':
-            self.norm = LayerNorm(norm_dim)
-        elif norm == 'adain':
-            self.norm = AdaptiveInstanceNorm2d(norm_dim)
+            self.norm = torch.nn.LayerNorm(norm_dim)
         elif norm == 'none' or norm == 'sn':
             self.norm = None
         elif norm == 'group':
@@ -141,10 +139,9 @@ class CharStyleEncoder(nn.Module):
             char_style_dim = style_dim
             self.single_style=True
         self.window=window
-        small_char_ex = window<3
+        small_char_ex = False
         self.down = []
         self.down += [Conv2dBlock(input_dim, dim, 5, 1, 2, norm=norm, activation=activ, pad_type=pad_type)] #64
-        #self.down += [Conv2dBlock(dim, dim, 3, 1, 1, norm=norm, activation=activ, pad_type=pad_type)]
         for i in range(2):
             if i==0 and small:
                 self.down += [Conv2dBlock(dim, 2 * dim, 3, 1, 1, norm=norm, activation=activ, pad_type=pad_type)] #32, 16
@@ -199,7 +196,7 @@ class CharStyleEncoder(nn.Module):
         elif diff<0:
             x = F.pad(x,(-diff//2,(-diff//2)+(-diff)%2),mode='replicate')
 
-        recogPred = torch.argmax(recog, dim=1) #taking max prediction, may want to to both max and 2nd?
+        recogPred = torch.argmax(recog, dim=1) 
         fill_styles=[ [] for b in range(batch_size)]
         found_chars_style={}
         if self.single_style:
@@ -236,11 +233,8 @@ class CharStyleEncoder(nn.Module):
 
                     found_chars_style[char_n]=defaultdict(lambda: torch.FloatTensor(self.char_style_dim).fill_(0).to(x.device))
 
-                    #perform weighted average over all locations of char_n (by batch, of course)
                     for i, (b,score) in enumerate(b_weight):
-                        #if b in found_chars_style[char_n]
-                        #char_style[b] += score * char_styles[i]
-                        #assert(not torch.isnan(char_style[b]).any())
+                        
                         found_chars_style[char_n][b] += score * char_styles[i]
                         b_sum[b] += score
                     bs_of_interest = list(found_chars_style[char_n].keys())
@@ -262,7 +256,7 @@ class CharStyleEncoder(nn.Module):
                     fill_bs.append( torch.stack(fill_styles[b],dim=0).mean(dim=0) )
                 else:
                     fill_bs.append( torch.FloatTensor(self.n_class*self.char_style_dim).fill_(0).to(x.device))
-            all_char_style = [list(torch.chunk(styles,self.n_class,dim=0)) for styles in fill_bs] #this is a pain, we chunk to prevent "inplace operation" in the following loop
+            all_char_style = [list(torch.chunk(styles,self.n_class,dim=0)) for styles in fill_bs] 
 
             #substitute in the styles of the characters we actually found
             for char_n,char_style in found_chars_style.items():
